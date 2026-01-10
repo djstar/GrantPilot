@@ -2417,8 +2417,8 @@ Backup_System:
 ## Outstanding TODOs
 
 - [x] **Section 8:** Define detailed API contracts ✅ Complete — see `grantpilot-api-contracts.md`
-- [ ] **Section 9:** Create agent prompt templates ← **NEXT**
-- [ ] **Section 10:** Design workflow diagrams
+- [x] **Section 9:** Create agent prompt templates ✅ Complete — see `grantpilot-agent-prompts.md`
+- [ ] **Section 10:** Design workflow diagrams ← **NEXT**
 - [ ] **Section 11:** Create detailed UI wireframes
 - [ ] **Additional:** Define testing strategy
 - [ ] **Additional:** Create deployment guide

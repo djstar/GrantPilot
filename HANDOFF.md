@@ -32,6 +32,7 @@ and all spec files, then let's continue from where we left off.
 |----------|-------------|-------|
 | `grantpilot-specification.md` | Master spec document (v1.2) | ~2400 |
 | `grantpilot-api-contracts.md` | 70+ REST endpoints, WebSocket events | ~3000 |
+| `grantpilot-agent-prompts.md` | 36 Jinja2 prompt templates for all agents | ~2800 |
 | `grantpilot-todo.md` | Progress tracker with session log | ~210 |
 
 ### Sections Complete
@@ -43,14 +44,14 @@ and all spec files, then let's continue from where we left off.
 6. ✅ Technical Stack (React, FastAPI, PostgreSQL/pgvector, Docker)
 7. ✅ Database Schema (complete PostgreSQL with 20+ tables)
 8. ✅ API Contracts (70+ endpoints, WebSocket events, TypeScript types)
+9. ✅ Agent Prompt Templates (**36 Jinja2 templates for all 6 agents + orchestrator**)
 12. ✅ Development Phases (**Split Phase 1 into 1a/1b**)
 - ✅ Appendix D: Offline/Sync Strategy
 - ✅ Appendix E: Security Considerations
 - ✅ Appendix F: Error Recovery & Crash Handling
 
 ### 🔲 Remaining TODO
-- **Section 9:** Agent Prompt Templates ← **NEXT PRIORITY**
-- **Section 10:** Workflow Diagrams
+- **Section 10:** Workflow Diagrams ← **NEXT PRIORITY**
 - **Section 11:** UI Wireframes
 - Testing Strategy
 - Deployment Guide

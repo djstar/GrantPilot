@@ -27,8 +27,8 @@
 
 | Section | Priority | Dependencies |
 |---------|----------|--------------|
-| 9. Agent Prompt Templates | **HIGH** | Section 4 |
-| 10. Workflow Diagrams | MEDIUM | Sections 3, 4 |
+| ~~9. Agent Prompt Templates~~ | ~~HIGH~~ | ✅ COMPLETE |
+| 10. Workflow Diagrams | **MEDIUM** | Sections 3, 4 |
 | 11. UI Wireframes | MEDIUM | Section 3 |
 | Testing Strategy | LOW | All sections |
 | Deployment Guide | LOW | Section 6 |
@@ -57,49 +57,19 @@
 
 ---
 
-### Section 9: Agent Prompt Templates ← **NEXT**
+### ~~Section 9: Agent Prompt Templates~~ ✅ COMPLETE
 
-**Research Agent Prompts:**
-- [ ] Web search query generation
-- [ ] NIH Reporter query construction
-- [ ] PubMed search optimization
-- [ ] Prior awardee analysis
-- [ ] Competitive landscape synthesis
-- [ ] Result summarization
-
-**Writing Agent Prompts:**
-- [ ] Section drafting (per section type)
-- [ ] Style matching/calibration
-- [ ] Anti-LLM detection and rephrasing (balanced mode)
-- [ ] Reviewer perspective critique
-- [ ] Persuasive enhancement
-- [ ] Tone adjustment
-
-**Compliance Agent Prompts:**
-- [ ] RFA parsing and extraction
-- [ ] Requirement identification
-- [ ] "Reading between the lines" analysis
-- [ ] Format validation
-- [ ] Content compliance checking
-- [ ] Pre-submission audit
-
-**Creative Agent Prompts:**
-- [ ] Figure concept generation
-- [ ] DALL-E prompt engineering for scientific figures
-- [ ] Diagram description
-- [ ] Style consistency
-
-**Analysis Agent Prompts:**
-- [ ] Figure interpretation
-- [ ] Data synthesis
-- [ ] Literature gap analysis
-- [ ] Grant strategy recommendations
-
-**Learning Agent Prompts:**
-- [ ] Reviewer feedback parsing (with parser templates from 5.5)
-- [ ] Pattern extraction
-- [ ] Style profile generation
-- [ ] Success factor identification
+**Completed on:** January 2025
+**File:** `grantpilot-agent-prompts.md`
+**Contents:**
+- ✅ Research Agent (6 prompts): web search, NIH Reporter, PubMed, prior awardee, competitive landscape, summarization
+- ✅ Writing Agent (9 prompts): Specific Aims, Significance, Innovation, Approach, style calibration, anti-LLM, reviewer critique, persuasion, tone
+- ✅ Compliance Agent (6 prompts): RFA parsing, requirements, hidden priorities, format check, content check, pre-submission audit
+- ✅ Creative Agent (4 prompts): figure concepts, DALL-E prompts, diagram specs, style consistency
+- ✅ Analysis Agent (4 prompts): figure interpretation, data synthesis, literature gaps, grant strategy
+- ✅ Learning Agent (4 prompts): feedback parsing, pattern extraction, style profile, success factors
+- ✅ Orchestrator (3 prompts): task routing, collaboration handling, result merging
+- ✅ Shared components: error handling, confidence framework, citation formatting
 
 ---
 
@@ -176,8 +146,8 @@
 
 1. ~~Define API contracts (Section 8)~~ ✅ DONE
 2. ~~Spec improvements (orchestrator, confidence, security, etc.)~~ ✅ DONE
-3. Create agent prompt templates (Section 9) ← **NEXT**
-4. Design workflow diagrams (Section 10)
+3. ~~Create agent prompt templates (Section 9)~~ ✅ DONE
+4. Design workflow diagrams (Section 10) ← **NEXT**
 5. Create UI wireframes (Section 11)
 
 ---
