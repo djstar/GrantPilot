@@ -1760,16 +1760,20 @@ Generate figure concepts that effectively communicate the research.
 - Keep figures uncluttered
 ```
 
-### 4.2 DALL-E Prompt Engineering for Scientific Figures
+### 4.2 Image Generation Prompt Engineering (Nano Banana / DALL-E)
 
 ```jinja2
-{# template_name: creative_dalle_prompt #}
+{# template_name: creative_image_gen_prompt #}
 {# agent: creative #}
 
-You are crafting DALL-E prompts to generate scientific figure components.
+You are crafting prompts for AI image generation of scientific figure components.
 
 ## Task
-Create optimized DALL-E prompts for the requested figure elements.
+Create optimized prompts for the requested figure elements.
+
+## Image Generation Backend
+**Primary:** Nano Banana API (preferred for scientific illustrations)
+**Fallback:** DALL-E 3 (if Nano Banana unavailable)
 
 ## Figure Request
 {{ figure_description }}
@@ -1784,23 +1788,43 @@ Create optimized DALL-E prompts for the requested figure elements.
 {{ reference_images }}
 {% endif %}
 
-## DALL-E Best Practices for Scientific Figures
+## Nano Banana API Parameters
+When using Nano Banana, include these parameters:
+- `model`: Select appropriate model for scientific content
+- `style_preset`: "scientific", "diagram", "medical", or "technical"
+- `negative_prompt`: Supported natively
+- `aspect_ratio`: Match grant figure requirements
+- `output_format`: PNG with transparency when needed
+
+## Prompt Best Practices for Scientific Figures
 1. Be extremely specific about layout and composition
 2. Specify style (vector, 3D render, hand-drawn, schematic)
 3. Describe colors precisely
-4. Mention what should NOT appear (avoid text unless necessary)
+4. Use negative prompts to exclude unwanted elements
 5. Request clean, professional aesthetic
 6. Consider generating components separately for later assembly
+7. For Nano Banana: leverage style presets for consistency
 
 ## Output Format
 ```json
 {
+  "primary_backend": "nano_banana",
+  "fallback_backend": "dalle3",
+
   "prompts": [
     {
       "component": "what this generates",
-      "prompt": "the DALL-E prompt",
+      "prompt": "the generation prompt",
+      "negative_prompt": "what to exclude from generation",
+      "nano_banana_params": {
+        "model": "recommended model",
+        "style_preset": "scientific/diagram/medical/technical",
+        "aspect_ratio": "16:9 or 1:1 or custom",
+        "steps": 30,
+        "cfg_scale": 7.5
+      },
+      "dalle_fallback_prompt": "adjusted prompt if using DALL-E instead",
       "style_keywords": ["keywords for style consistency"],
-      "negative_prompt": "what to avoid (for systems that support it)",
       "expected_result": "what the output should look like",
       "post_processing_notes": "how to refine or combine with other elements"
     }
@@ -1808,6 +1832,19 @@ Create optimized DALL-E prompts for the requested figure elements.
 
   "assembly_instructions": [
     "how to combine generated components into final figure"
+  ],
+
+  "api_call_sequence": [
+    {
+      "step": 1,
+      "action": "generate background/base element",
+      "depends_on": null
+    },
+    {
+      "step": 2,
+      "action": "generate foreground elements",
+      "depends_on": 1
+    }
   ],
 
   "fallback_approach": "what to do if generation doesn't work well",
@@ -1818,10 +1855,23 @@ Create optimized DALL-E prompts for the requested figure elements.
 }
 ```
 
-## Limitations to Note
-- DALL-E struggles with: text, precise data visualizations, complex diagrams with many labeled parts
-- Better for: conceptual illustrations, biological structures, visual metaphors, background elements
-- Often best to generate components and assemble in design software
+## Backend-Specific Notes
+
+### Nano Banana Strengths
+- Better control over scientific/technical styles
+- Native negative prompt support
+- More consistent style presets
+- Better for: molecular structures, cell diagrams, pathway illustrations
+
+### DALL-E 3 Strengths
+- Strong conceptual illustration
+- Good photorealistic rendering
+- Better for: metaphorical images, complex scenes
+
+### Common Limitations (Both)
+- Text rendering is unreliable — add labels in post-processing
+- Precise data visualizations should use charting libraries instead
+- Complex multi-part diagrams: generate components separately
 ```
 
 ### 4.3 Diagram Description for Manual Creation

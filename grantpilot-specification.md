@@ -739,7 +739,8 @@ Creative Agent:
       - Data visualization suggestions
       
     backends:
-      - DALL-E 3 (OpenAI) — primary
+      - Nano Banana API — primary (better for scientific illustrations)
+      - DALL-E 3 (OpenAI) — fallback
       - Stable Diffusion (local option)
       - Programmatic: matplotlib, plotly, mermaid diagrams
       
@@ -1061,11 +1062,11 @@ Citation System:
 │                                                                             │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
 │  │ Claude API  │  │ OpenAI API  │  │ Ollama      │  │ Image Gen   │        │
-│  │ (Anthropic) │  │ (GPT-4)     │  │ (Local)     │  │ (DALL-E)    │        │
+│  │ (Anthropic) │  │ (GPT-4)     │  │ (Local)     │  │             │        │
 │  ├─────────────┤  ├─────────────┤  ├─────────────┤  ├─────────────┤        │
-│  │ claude-3.5  │  │ gpt-4o      │  │ llama3.2    │  │ dall-e-3    │        │
-│  │ claude-3    │  │ gpt-4-turbo │  │ mistral     │  │ stable-diff │        │
-│  │             │  │ o1          │  │ deepseek    │  │ (local)     │        │
+│  │ claude-3.5  │  │ gpt-4o      │  │ llama3.2    │  │ nano-banana │        │
+│  │ claude-3    │  │ gpt-4-turbo │  │ mistral     │  │ dall-e-3    │        │
+│  │             │  │ o1          │  │ deepseek    │  │ stable-diff │        │
 │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘        │
 │                                                                             │
 │  TASK → MODEL MAPPING (configurable):                                       │
@@ -1076,7 +1077,7 @@ Citation System:
 │  Complex reasoning       │ Claude 3.5    │ GPT-4o        │ Best quality     │
 │  Writing/drafting        │ Claude 3.5    │ GPT-4         │ Style matters    │
 │  Quick edits             │ Ollama local  │ Claude        │ Speed + cost     │
-│  Image generation        │ DALL-E 3      │ Stable Diff   │ Quality          │
+│  Image generation        │ Nano Banana   │ DALL-E 3      │ Scientific figs  │
 │  Embeddings              │ OpenAI Ada    │ Local model   │ RAG indexing     │
 │  Offline mode            │ Ollama        │ —             │ No internet      │
 │                                                                             │
@@ -1271,7 +1272,7 @@ The system displays confidence for each extracted field:
 │  Cloud LLMs:    Anthropic SDK, OpenAI SDK                                   │
 │  Local LLMs:    Ollama                                                      │
 │  Embeddings:    OpenAI text-embedding-3-small                               │
-│  Image Gen:     OpenAI DALL-E 3 API                                         │
+│  Image Gen:     Nano Banana API (primary), DALL-E 3 (fallback)              │
 │  Prompts:       Jinja2 templates                                            │
 │                                                                             │
 │  DATA                                                                       │
@@ -2118,7 +2119,7 @@ This section will include:
 **Goal:** Full feature set including creative and analysis capabilities
 
 **Deliverables:**
-- [ ] Creative Agent (DALL-E integration for figures)
+- [ ] Creative Agent (Nano Banana / DALL-E integration for figures)
 - [ ] Analysis Agent (figure interpretation, data synthesis)
 - [ ] ReadCube integration (with RIS/BibTeX fallback)
 - [ ] Review & Learn mode UI
@@ -2176,7 +2177,8 @@ This section will include:
 │ │  By Provider:                                                            ││
 │ │  • Anthropic (Claude):  $8.23  (66%)                                     ││
 │ │  • OpenAI (GPT-4):      $3.12  (25%)                                     ││
-│ │  • OpenAI (DALL-E):     $1.12  (9%)                                      ││
+│ │  • Nano Banana:         $0.89  (7%)                                      ││
+│ │  • OpenAI (DALL-E):     $0.23  (2%)                                      ││
 │ │  • Ollama (local):      $0.00  (free)                                    ││
 │ │                                                                          ││
 │ └──────────────────────────────────────────────────────────────────────────┘│
@@ -2219,7 +2221,9 @@ This section will include:
 | Service | Purpose | Required |
 |---------|---------|----------|
 | Anthropic API | Claude LLM | Yes |
-| OpenAI API | GPT-4, DALL-E, Embeddings | Yes |
+| OpenAI API | GPT-4, Embeddings | Yes |
+| Nano Banana API | Image generation (primary) | Yes |
+| OpenAI DALL-E | Image generation (fallback) | Optional |
 | NIH Reporter API | Funded grants database | Yes |
 | PubMed API | Literature search | Yes |
 | ReadCube API | Reference manager sync | Optional |
