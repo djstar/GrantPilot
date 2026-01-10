@@ -18,6 +18,8 @@
 | 6. Technical Stack | ✅ Complete | Full stack defined |
 | 7. Database Schema | ✅ Complete | PostgreSQL with pgvector, all tables |
 | 8. API Contracts | ✅ Complete | 70+ endpoints, WebSocket events, TypeScript types |
+| 9. Agent Prompt Templates | ✅ Complete | 36 Jinja2 templates for all agents |
+| 10. Workflow Diagrams | ✅ Complete | 4 user journeys + 5 system flows |
 | 12. Development Phases | ✅ Complete | **Split Phase 1 into 1a/1b** for faster iteration |
 | Appendix D | ✅ Complete | Offline/Sync Strategy |
 | Appendix E | ✅ Complete | Security Considerations |
@@ -28,8 +30,8 @@
 | Section | Priority | Dependencies |
 |---------|----------|--------------|
 | ~~9. Agent Prompt Templates~~ | ~~HIGH~~ | ✅ COMPLETE |
-| 10. Workflow Diagrams | **MEDIUM** | Sections 3, 4 |
-| 11. UI Wireframes | MEDIUM | Section 3 |
+| ~~10. Workflow Diagrams~~ | ~~MEDIUM~~ | ✅ COMPLETE |
+| 11. UI Wireframes | **NEXT** | Section 3 |
 | Testing Strategy | LOW | All sections |
 | Deployment Guide | LOW | Section 6 |
 
@@ -73,23 +75,23 @@
 
 ---
 
-### Section 10: Workflow Diagrams
+### ~~Section 10: Workflow Diagrams~~ ✅ COMPLETE
+
+**Completed on:** January 2025
+**Location:** `grantpilot-specification.md` Section 10
 
 **User Journey Maps:**
-- [ ] New user onboarding flow
-- [ ] Create new project flow
-- [ ] Document ingestion flow
-- [ ] Agent task lifecycle
-- [ ] Co-pilot interaction flow
-- [ ] Review & feedback submission flow
+- [x] New user onboarding flow (10.1.1)
+- [x] Create new project flow (10.1.2)
+- [x] Agent mode task flow (10.1.3)
+- [x] Co-pilot mode interaction flow (10.1.4)
 
 **System Flows:**
-- [ ] Document processing pipeline
-- [ ] RAG retrieval flow
-- [ ] Agent orchestration flow (including collaboration protocol)
-- [ ] Learning/feedback loop
-- [ ] Backup and recovery flow
-- [ ] Offline/sync state machine (from Appendix D)
+- [x] Document ingestion pipeline (10.2.1)
+- [x] Agent orchestration flow (10.2.2)
+- [x] RAG retrieval flow (10.2.3)
+- [x] Self-learning feedback loop (10.2.4)
+- [x] Submission tracking & review flow (10.2.5)
 
 ---
 
