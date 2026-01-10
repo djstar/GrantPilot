@@ -20,6 +20,7 @@
 | 8. API Contracts | ✅ Complete | 70+ endpoints, WebSocket events, TypeScript types |
 | 9. Agent Prompt Templates | ✅ Complete | 36 Jinja2 templates for all agents |
 | 10. Workflow Diagrams | ✅ Complete | 4 user journeys + 5 system flows |
+| 11. UI Wireframes | ✅ Complete | 14 screens + design system + component specs |
 | 12. Development Phases | ✅ Complete | **Split Phase 1 into 1a/1b** for faster iteration |
 | Appendix D | ✅ Complete | Offline/Sync Strategy |
 | Appendix E | ✅ Complete | Security Considerations |
@@ -31,8 +32,8 @@
 |---------|----------|--------------|
 | ~~9. Agent Prompt Templates~~ | ~~HIGH~~ | ✅ COMPLETE |
 | ~~10. Workflow Diagrams~~ | ~~MEDIUM~~ | ✅ COMPLETE |
-| 11. UI Wireframes | **NEXT** | Section 3 |
-| Testing Strategy | LOW | All sections |
+| ~~11. UI Wireframes~~ | ~~MEDIUM~~ | ✅ COMPLETE |
+| Testing Strategy | **NEXT** | All sections |
 | Deployment Guide | LOW | Section 6 |
 
 ---
@@ -95,23 +96,32 @@
 
 ---
 
-### Section 11: UI Wireframes
+### ~~Section 11: UI Wireframes~~ ✅ COMPLETE
 
-**Screens to Design:**
-- [ ] Dashboard / Home
-- [ ] Project list view
-- [ ] Project detail view
-- [ ] Agent mode panel
-- [ ] Co-pilot mode (split view)
-- [ ] Document viewer
-- [ ] RFA analysis view
-- [ ] Compliance checker (with confidence indicators)
-- [ ] Knowledge base manager
-- [ ] Settings / Configuration
-- [ ] Cost tracking dashboard
-- [ ] Review & Learn mode
-- [ ] Sync conflict resolution dialog
-- [ ] Style confidence display
+**Completed on:** January 2025
+**Location:** `grantpilot-specification.md` Section 11
+
+**Screens Designed:**
+- [x] Dashboard / Home (11.2)
+- [x] Project list view (11.3)
+- [x] Project detail view (11.4)
+- [x] Agent mode panel (11.5)
+- [x] Co-pilot mode (split view) (11.6)
+- [x] Document viewer (11.7)
+- [x] RFA analysis view (11.8)
+- [x] Compliance checker (11.9)
+- [x] Knowledge base manager (11.10)
+- [x] Settings / Configuration (11.11)
+- [x] Cost tracking dashboard (11.12)
+- [x] Review & Learn mode (11.13)
+- [x] Sync conflict resolution dialog (11.14)
+- [x] Style profile display (11.15)
+
+**Additional Specifications:**
+- [x] Design system overview (11.1) — tokens, typography, component library
+- [x] Component specifications (11.16) — navigation, interactive, form components
+- [x] Responsive design notes (11.17) — breakpoints, minimum requirements
+- [x] Accessibility considerations (11.18) — WCAG compliance, keyboard nav
 
 ---
 
@@ -149,8 +159,10 @@
 1. ~~Define API contracts (Section 8)~~ ✅ DONE
 2. ~~Spec improvements (orchestrator, confidence, security, etc.)~~ ✅ DONE
 3. ~~Create agent prompt templates (Section 9)~~ ✅ DONE
-4. Design workflow diagrams (Section 10) ← **NEXT**
-5. Create UI wireframes (Section 11)
+4. ~~Design workflow diagrams (Section 10)~~ ✅ DONE
+5. ~~Create UI wireframes (Section 11)~~ ✅ DONE
+6. Testing Strategy ← **NEXT**
+7. Deployment Guide
 
 ---
 
@@ -207,6 +219,40 @@
 | General scientific | SciBERT | allenai/scibert |
 | Offline LLM | BioMistral 2 / PMC-LLaMA | Open-source |
 | Fine-tuning | HuggingFace PEFT | LoRA/QLoRA |
+
+---
+
+### Session: January 2025 (UI Wireframes)
+
+**Completed:**
+- Added Section 11: UI Wireframes with 18 subsections
+- Created design system overview (colors, typography, components)
+- Designed 14 detailed ASCII wireframes for all major screens
+- Added component specifications (navigation, interactive, form)
+- Added responsive design notes and breakpoints
+- Added accessibility considerations (WCAG compliance)
+
+**Screens Wireframed:**
+1. Dashboard/Home — quick stats, priority actions, deadlines, recent projects
+2. Project List View — filtering, sorting, bulk actions, portfolio summary
+3. Project Detail View — documents, RFA requirements, progress, budget
+4. Agent Mode Panel — mission definition, constraints, source scope, live activity
+5. Co-pilot Mode — split view with document workspace and chat
+6. Document Viewer — full-screen viewing with annotations
+7. RFA Analysis View — quick facts, AI-inferred priorities, explicit requirements
+8. Compliance Checker — format checks, content checks, anti-LLM detection
+9. Knowledge Base Manager — categories, documents, folder watching, style learning
+10. Settings & Configuration — API keys, LLM preferences, budget & limits
+11. Cost Tracking Dashboard — monthly overview, spend by project/agent, transactions
+12. Review & Learn Mode — submission tracker, parsed feedback, AI patterns
+13. Sync Conflict Resolution Dialog — version comparison, resolution options
+14. Style Profile Display — metrics, corpus, characteristic phrases, match examples
+
+**Design Decisions:**
+- shadcn/ui component library with Tailwind CSS
+- Desktop-only (minimum 1024px width)
+- WCAG AA color contrast compliance
+- Confidence indicators consistent with Section 3.6
 
 ---
 

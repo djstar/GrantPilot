@@ -45,15 +45,17 @@ and all spec files, then let's continue from where we left off.
 7. ✅ Database Schema (complete PostgreSQL with 20+ tables)
 8. ✅ API Contracts (70+ endpoints, WebSocket events, TypeScript types)
 9. ✅ Agent Prompt Templates (**36 Jinja2 templates for all 6 agents + orchestrator**)
+10. ✅ Workflow Diagrams (**4 user journeys + 5 system flows**)
+11. ✅ UI Wireframes (**14 screens + design system + component specs**)
 12. ✅ Development Phases (**Split Phase 1 into 1a/1b**)
 - ✅ Appendix D: Offline/Sync Strategy
 - ✅ Appendix E: Security Considerations
 - ✅ Appendix F: Error Recovery & Crash Handling
 
 ### 🔲 Remaining TODO
-- **Section 10:** Workflow Diagrams ← **NEXT PRIORITY**
-- **Section 11:** UI Wireframes
-- Testing Strategy
+- ~~**Section 10:** Workflow Diagrams~~ ✅ COMPLETE
+- ~~**Section 11:** UI Wireframes~~ ✅ COMPLETE
+- Testing Strategy ← **NEXT PRIORITY**
 - Deployment Guide
 
 ---
