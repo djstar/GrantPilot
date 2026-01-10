@@ -14,7 +14,7 @@
 | 2. Vision & Value Proposition | ✅ Complete | Problem/solution, success metrics |
 | 3. User Experience & Interface | ✅ Complete | 3 modes, info arch, **+ Confidence indicators (3.6)** |
 | 4. Multi-Agent Architecture | ✅ Complete | 6 agents, **+ Orchestrator collaboration protocol (4.2)** |
-| 5. Self-Learning RAG System | ✅ Complete | Architecture, **+ Style confidence tiers (5.2), ReadCube fallbacks (5.3), Feedback parser templates (5.5)** |
+| 5. Self-Learning RAG System | ✅ Complete | Architecture, **+ Style confidence tiers (5.2), ReadCube fallbacks (5.3), Feedback parser templates (5.5), Advanced Self-Learning (5.6)** |
 | 6. Technical Stack | ✅ Complete | Full stack defined |
 | 7. Database Schema | ✅ Complete | PostgreSQL with pgvector, all tables |
 | 8. API Contracts | ✅ Complete | 70+ endpoints, WebSocket events, TypeScript types |
@@ -173,6 +173,38 @@
 - Balanced anti-LLM detection
 - Soft budget warnings (complete task, block new)
 - Full parser template system for feedback
+
+---
+
+### Session: January 2025 (Advanced Self-Learning)
+
+**Completed:**
+- Added Section 5.6: Advanced Self-Learning Architecture
+- Specified pretrained models to leverage (SPECTER2, PubMedBERT, SciBERT, BioMistral 2, PMC-LLaMA)
+- Designed LoRA/PEFT fine-tuning strategy for style adapters, classifiers, critique extractors
+- Added agent performance tracking system
+- Designed prompt evolution system with A/B testing and outcome correlation
+- Added proactive knowledge expansion (literature monitoring, funder intelligence, gap analysis)
+- Created 5 new database tables: `agent_performance`, `prompt_versions`, `knowledge_suggestions`, `finetune_jobs`, `literature_monitors`
+- Updated HANDOFF.md with ML model decisions
+- Updated Creative Agent prompts for Nano Banana API as primary image generation
+
+**Key Decisions Made:**
+- SPECTER2 for scientific embeddings (task-specific adapters)
+- PubMedBERT for biomedical RAG retrieval
+- QLoRA for fine-tuning (runs on consumer hardware)
+- Prompt versioning with A/B testing
+- Automated literature and funder monitoring
+- Nano Banana API as primary image generation backend
+
+**Models Selected:**
+| Purpose | Model | Source |
+|---------|-------|--------|
+| Scientific embeddings | SPECTER2 | allenai/specter2 (HuggingFace) |
+| Biomedical embeddings | PubMedBERT | NeuML/pubmedbert-base-embeddings |
+| General scientific | SciBERT | allenai/scibert |
+| Offline LLM | BioMistral 2 / PMC-LLaMA | Open-source |
+| Fine-tuning | HuggingFace PEFT | LoRA/QLoRA |
 
 ---
 

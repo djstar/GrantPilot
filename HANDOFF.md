@@ -82,6 +82,18 @@ and all spec files, then let's continue from where we left off.
 | Feedback Parsing | **Full template system** | NIH structured, NSF semi-structured, Foundation/generic NLP-based |
 | Confidence Indicators | **Show everywhere** | All AI inferences show confidence (High/Medium/Low) for transparency |
 | Phase 1 | **Split into 1a + 1b** | 1a=Core Foundation, 1b=Agent Foundation for faster time-to-usable |
+| Image Generation | **Nano Banana primary** | DALL-E 3 as fallback; better scientific illustration control |
+| Self-Learning | **Multi-layer architecture** | SPECTER2/PubMedBERT embeddings, LoRA fine-tuning, prompt evolution |
+
+### ML Models & Self-Learning (January 2025)
+| Component | Choice | Rationale |
+|-----------|--------|-----------|
+| Scientific Embeddings | **SPECTER2** (Allen AI) | Task-specific adapters; trained on 6M triplets across 23 fields |
+| Biomedical Embeddings | **PubMedBERT** | 768-dim vectors optimized for medical/life science literature |
+| Fallback Embeddings | **SciBERT** | 3.17B token pretraining on biomedical + CS papers |
+| Local LLM | **BioMistral 2 / PMC-LLaMA** | Domain-specific, open-source for offline inference |
+| Fine-Tuning | **QLoRA/PEFT** | 95%+ parameter reduction; runs on consumer hardware |
+| Prompt Learning | **A/B testing + outcome correlation** | Prompts evolve based on acceptance rate and funding outcomes |
 
 ---
 

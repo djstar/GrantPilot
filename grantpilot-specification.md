@@ -1226,6 +1226,413 @@ The system displays confidence for each extracted field:
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
+### 5.6 Advanced Self-Learning Architecture
+
+GrantPilot employs a multi-layered self-learning system that improves through usage, leveraging both existing pretrained models and custom fine-tuning pipelines.
+
+#### 5.6.1 Pretrained Models to Leverage
+
+| Model | Purpose | Why Use It |
+|-------|---------|------------|
+| **SPECTER2** (Allen AI) | Scientific paper embeddings | Task-specific adapters for retrieval, classification; trained on 6M scientific triplets across 23 fields |
+| **PubMedBERT** | Biomedical text embeddings | 768-dim vectors optimized for medical/life science literature; ideal for RAG retrieval |
+| **SciBERT** | General scientific embeddings | Pretrained on 3.17B tokens from biomedical + CS papers; good fallback |
+| **BioMistral 2** | Biomedical LLM | Open-source, domain-specific; good for offline/local inference |
+| **PMC-LLaMA** (7B/13B) | Biomedical generation | Trained on 4.8M papers + 30K textbooks; alternative to cloud APIs |
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    EMBEDDING MODEL ARCHITECTURE                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  DOCUMENT INGESTION                                                         │
+│  ══════════════════                                                         │
+│                                                                             │
+│   Grant Draft / Paper / RFA                                                 │
+│           │                                                                 │
+│           ▼                                                                 │
+│   ┌───────────────────────────────────────────────────────────────────┐    │
+│   │                    SPECTER2 + Adapters                            │    │
+│   │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐            │    │
+│   │  │ Retrieval    │  │ Classification│  │ Similarity   │            │    │
+│   │  │ Adapter      │  │ Adapter       │  │ Adapter      │            │    │
+│   │  └──────────────┘  └──────────────┘  └──────────────┘            │    │
+│   └───────────────────────────────────────────────────────────────────┘    │
+│           │                    │                    │                       │
+│           ▼                    ▼                    ▼                       │
+│   ┌──────────────┐    ┌──────────────┐    ┌──────────────┐                 │
+│   │ RAG Search   │    │ Doc Type     │    │ Style Match  │                 │
+│   │ (find similar│    │ Classification│    │ Comparison   │                 │
+│   │  content)    │    │              │    │              │                 │
+│   └──────────────┘    └──────────────┘    └──────────────┘                 │
+│                                                                             │
+│  SPECIALIZED PIPELINES                                                      │
+│  ════════════════════                                                       │
+│                                                                             │
+│   PubMedBERT → Citation/reference semantic search                          │
+│   SciBERT    → Fallback for non-biomedical content                         │
+│   OpenAI Ada → High-quality general embeddings (cloud)                     │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### 5.6.2 Fine-Tuning Strategy (LoRA/PEFT)
+
+GrantPilot uses Parameter-Efficient Fine-Tuning (PEFT) to adapt models without full retraining:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    FINE-TUNING ARCHITECTURE                                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  WHAT WE FINE-TUNE                                                          │
+│  ═════════════════                                                          │
+│                                                                             │
+│  1. Style Adapter (LoRA)                                                    │
+│     ────────────────────                                                    │
+│     Base: Mistral 7B or LLaMA 3                                             │
+│     Training data: User's funded grants + papers                            │
+│     Purpose: Match user's writing voice                                     │
+│     Size: ~20MB adapter (vs 14GB full model)                                │
+│     Update frequency: After each new document ingestion                     │
+│                                                                             │
+│  2. Grant Section Classifier (LoRA)                                         │
+│     ──────────────────────────────                                          │
+│     Base: SciBERT or SPECTER2                                               │
+│     Training data: Labeled grant sections (aims, significance, etc.)        │
+│     Purpose: Accurate document classification                               │
+│     Update: Continuous learning from user corrections                       │
+│                                                                             │
+│  3. Critique Pattern Extractor (LoRA)                                       │
+│     ────────────────────────────────                                        │
+│     Base: PubMedBERT                                                        │
+│     Training data: Parsed reviewer feedback                                 │
+│     Purpose: Identify weakness patterns across submissions                  │
+│     Update: After each feedback ingestion                                   │
+│                                                                             │
+│  TRAINING APPROACH                                                          │
+│  ═════════════════                                                          │
+│                                                                             │
+│  Method: QLoRA (4-bit quantization + LoRA)                                  │
+│  • Reduces VRAM from 28GB to 6GB for 7B models                              │
+│  • Runs on consumer GPUs or Apple Silicon                                   │
+│  • Training time: ~30 min for style adapter on M2 Mac                       │
+│                                                                             │
+│  Implementation:                                                            │
+│  ┌────────────────────────────────────────────────────────────────────┐    │
+│  │  from peft import LoraConfig, get_peft_model                       │    │
+│  │  from transformers import AutoModelForCausalLM                     │    │
+│  │                                                                    │    │
+│  │  lora_config = LoraConfig(                                         │    │
+│  │      r=16,                    # Rank of update matrices            │    │
+│  │      lora_alpha=32,           # Scaling factor                     │    │
+│  │      target_modules=["q_proj", "v_proj"],                          │    │
+│  │      lora_dropout=0.05,                                            │    │
+│  │      bias="none",                                                  │    │
+│  │      task_type="CAUSAL_LM"                                         │    │
+│  │  )                                                                 │    │
+│  │                                                                    │    │
+│  │  model = get_peft_model(base_model, lora_config)                   │    │
+│  │  # Only 0.1% of parameters are trainable                           │    │
+│  └────────────────────────────────────────────────────────────────────┘    │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### 5.6.3 Agent Performance Learning
+
+Agents track their own effectiveness to improve over time:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    AGENT PERFORMANCE TRACKING                                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  METRICS TRACKED PER AGENT                                                  │
+│  ═════════════════════════                                                  │
+│                                                                             │
+│  Research Agent:                                                            │
+│  • Query success rate (found relevant results)                              │
+│  • Source reliability (user accepted findings)                              │
+│  • Time to useful result                                                    │
+│                                                                             │
+│  Writing Agent:                                                             │
+│  • Acceptance rate (user kept draft)                                        │
+│  • Edit distance (how much user changed output)                             │
+│  • Style match score over time                                              │
+│  • Funded grant correlation (did drafts lead to funding?)                   │
+│                                                                             │
+│  Compliance Agent:                                                          │
+│  • False positive rate (flagged non-issues)                                 │
+│  • False negative rate (missed real issues)                                 │
+│  • User override frequency                                                  │
+│                                                                             │
+│  LEARNING LOOP                                                              │
+│  ════════════                                                               │
+│                                                                             │
+│  ┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐                  │
+│  │ Agent   │───▶│ User    │───▶│ Analyze │───▶│ Adjust  │                  │
+│  │ Output  │    │ Action  │    │ Delta   │    │ Weights │                  │
+│  └─────────┘    └─────────┘    └─────────┘    └─────────┘                  │
+│       │                                             │                       │
+│       └─────────────────────────────────────────────┘                       │
+│                      Feedback Loop                                          │
+│                                                                             │
+│  WHAT GETS ADJUSTED                                                         │
+│  ══════════════════                                                         │
+│                                                                             │
+│  • Prompt template selection (which template works best for this task)      │
+│  • Source weighting (which databases yield best results)                    │
+│  • Confidence thresholds (calibrate based on actual accuracy)               │
+│  • Agent routing (orchestrator learns which agent handles what)             │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### 5.6.4 Prompt Evolution System
+
+Prompts improve through A/B testing and outcome correlation:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    PROMPT EVOLUTION SYSTEM                                   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  VERSION CONTROL FOR PROMPTS                                                │
+│  ═══════════════════════════                                                │
+│                                                                             │
+│  Each prompt template has:                                                  │
+│  • Version number (semantic versioning)                                     │
+│  • Performance metrics (acceptance rate, edit distance)                     │
+│  • A/B test variants                                                        │
+│  • Outcome correlation (funded vs unfunded grants using this prompt)        │
+│                                                                             │
+│  Example:                                                                   │
+│  ┌────────────────────────────────────────────────────────────────────┐    │
+│  │  Prompt: writing_specific_aims                                     │    │
+│  │  ─────────────────────────────────────                             │    │
+│  │  Version: 2.3.1                                                    │    │
+│  │  Variants:                                                         │    │
+│  │    A (current): Structured bullet approach    | Accept: 78%        │    │
+│  │    B (test):    Narrative flow approach       | Accept: 82% ←      │    │
+│  │                                                                    │    │
+│  │  Outcome data:                                                     │    │
+│  │    Grants using v2.x: 12 submitted, 4 funded (33%)                 │    │
+│  │    Grants using v1.x: 8 submitted, 1 funded (12.5%)                │    │
+│  │                                                                    │    │
+│  │  Auto-recommendation: Promote variant B to default                 │    │
+│  └────────────────────────────────────────────────────────────────────┘    │
+│                                                                             │
+│  EVOLUTION TRIGGERS                                                         │
+│  ═════════════════                                                          │
+│                                                                             │
+│  Automatic:                                                                 │
+│  • Low acceptance rate (< 60%) → flag for review                           │
+│  • High edit distance (> 50%) → user not using output as-is               │
+│  • Negative outcome correlation → prompt may be hurting                    │
+│                                                                             │
+│  Manual:                                                                    │
+│  • User creates custom prompt → becomes candidate variant                   │
+│  • User reports "not helpful" → triggers review                            │
+│                                                                             │
+│  PROMPT LEARNING PIPELINE                                                   │
+│  ════════════════════════                                                   │
+│                                                                             │
+│  1. Collect: Track every prompt invocation + outcome                        │
+│  2. Analyze: Weekly batch analysis of prompt effectiveness                  │
+│  3. Generate: LLM suggests prompt improvements based on patterns            │
+│  4. Test: A/B test new variants on real tasks                               │
+│  5. Promote: Winning variants become new defaults                           │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### 5.6.5 Proactive Knowledge Expansion
+
+The system autonomously identifies and suggests additions to the knowledge base:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    PROACTIVE KNOWLEDGE EXPANSION                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  AUTOMATED MONITORING                                                       │
+│  ════════════════════                                                       │
+│                                                                             │
+│  1. Literature Monitoring                                                   │
+│     ──────────────────────                                                  │
+│     • Weekly PubMed alerts for user's research keywords                     │
+│     • Track citations to user's papers                                      │
+│     • Monitor competitor publications                                       │
+│     • Notify: "3 new papers relevant to your R01 aims"                      │
+│                                                                             │
+│  2. Funder Intelligence Updates                                             │
+│     ────────────────────────────                                            │
+│     • Monitor NIH Reporter for new awards in user's area                    │
+│     • Track funding trends (which topics getting funded?)                   │
+│     • Detect new RFAs matching user profile                                 │
+│     • Notify: "New R21 opportunity in CAR-T immunotherapy"                  │
+│                                                                             │
+│  3. Gap Analysis                                                            │
+│     ────────────                                                            │
+│     • Identify missing document types in knowledge base                     │
+│     • Suggest: "No biosketches found — upload for compliance checking"      │
+│     • Suggest: "Only 3 papers in corpus — need 7 more for style confidence" │
+│                                                                             │
+│  KNOWLEDGE FRESHNESS                                                        │
+│  ════════════════════                                                       │
+│                                                                             │
+│  Document Age Decay:                                                        │
+│  ┌────────────────────────────────────────────────────────────────────┐    │
+│  │  Age           │ Relevance Weight │ Action                        │    │
+│  │  ──────────────│──────────────────│───────────────────────────────│    │
+│  │  < 2 years     │ 1.0x            │ Full weight                    │    │
+│  │  2-5 years     │ 0.8x            │ Slight decay                   │    │
+│  │  > 5 years     │ 0.5x            │ Suggest update or archive      │    │
+│  │  Superseded    │ 0.2x            │ Keep for history only          │    │
+│  └────────────────────────────────────────────────────────────────────┘    │
+│                                                                             │
+│  CROSS-PROJECT LEARNING                                                     │
+│  ══════════════════════                                                     │
+│                                                                             │
+│  Optional (user-enabled):                                                   │
+│  • Build "funder preference profiles" across multiple submissions           │
+│  • Learn which reviewers respond to which argumentation styles              │
+│  • Detect patterns: "NIH NIDDK prefers mechanistic detail"                  │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### 5.6.6 Self-Learning Database Tables
+
+```sql
+-- Agent performance tracking
+CREATE TABLE agent_performance (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    agent_type      VARCHAR(50) NOT NULL,
+    task_id         UUID REFERENCES agent_tasks(id),
+    prompt_version  VARCHAR(20),
+
+    -- Metrics
+    execution_time_ms INTEGER,
+    token_count     INTEGER,
+    user_accepted   BOOLEAN,
+    edit_distance   DECIMAL(5,4),  -- 0.0 = no edits, 1.0 = complete rewrite
+    user_rating     INTEGER CHECK (user_rating BETWEEN 1 AND 5),
+
+    -- Outcome correlation (filled later)
+    grant_id        UUID REFERENCES projects(id),
+    grant_outcome   VARCHAR(50),  -- 'funded', 'not_funded', 'pending'
+
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Prompt version tracking
+CREATE TABLE prompt_versions (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    template_name   VARCHAR(100) NOT NULL,
+    version         VARCHAR(20) NOT NULL,
+    content         TEXT NOT NULL,
+
+    -- A/B testing
+    is_active       BOOLEAN DEFAULT true,
+    is_default      BOOLEAN DEFAULT false,
+    traffic_weight  DECIMAL(3,2) DEFAULT 0.5,  -- For A/B split
+
+    -- Performance metrics
+    invocation_count INTEGER DEFAULT 0,
+    acceptance_rate DECIMAL(5,4),
+    avg_edit_distance DECIMAL(5,4),
+    outcome_correlation DECIMAL(5,4),  -- Correlation with funding
+
+    -- Metadata
+    parent_version  VARCHAR(20),
+    change_notes    TEXT,
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    promoted_at     TIMESTAMP,
+
+    UNIQUE(template_name, version)
+);
+
+-- Knowledge expansion suggestions
+CREATE TABLE knowledge_suggestions (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    suggestion_type VARCHAR(50) NOT NULL,  -- 'paper', 'rfa', 'gap', 'competitor'
+
+    -- What we're suggesting
+    title           TEXT,
+    source_url      TEXT,
+    relevance_score DECIMAL(3,2),
+
+    -- Why we're suggesting it
+    reason          TEXT,
+    related_project UUID REFERENCES projects(id),
+
+    -- User action
+    status          VARCHAR(20) DEFAULT 'pending',  -- 'pending', 'accepted', 'dismissed'
+    user_action_at  TIMESTAMP,
+
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Fine-tuning jobs
+CREATE TABLE finetune_jobs (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    model_type      VARCHAR(50) NOT NULL,  -- 'style_adapter', 'classifier', 'critique'
+    base_model      VARCHAR(100) NOT NULL,
+
+    -- Training data
+    training_docs   UUID[],
+    training_size   INTEGER,
+
+    -- Status
+    status          VARCHAR(20) DEFAULT 'pending',
+    started_at      TIMESTAMP,
+    completed_at    TIMESTAMP,
+    error_message   TEXT,
+
+    -- Output
+    adapter_path    TEXT,
+    adapter_size_mb DECIMAL(10,2),
+
+    -- Metrics
+    training_loss   DECIMAL(8,6),
+    eval_metrics    JSONB,
+
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Literature monitoring subscriptions
+CREATE TABLE literature_monitors (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id         UUID REFERENCES users(id),
+
+    -- What to monitor
+    monitor_type    VARCHAR(50) NOT NULL,  -- 'pubmed', 'nih_reporter', 'arxiv'
+    query           TEXT NOT NULL,
+    keywords        TEXT[],
+
+    -- Schedule
+    frequency       VARCHAR(20) DEFAULT 'weekly',
+    last_run        TIMESTAMP,
+    next_run        TIMESTAMP,
+
+    -- Results
+    total_found     INTEGER DEFAULT 0,
+    new_since_last  INTEGER DEFAULT 0,
+
+    is_active       BOOLEAN DEFAULT true,
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes for performance
+CREATE INDEX idx_agent_performance_type ON agent_performance(agent_type);
+CREATE INDEX idx_agent_performance_outcome ON agent_performance(grant_outcome);
+CREATE INDEX idx_prompt_versions_template ON prompt_versions(template_name, is_active);
+CREATE INDEX idx_knowledge_suggestions_status ON knowledge_suggestions(status);
+CREATE INDEX idx_literature_monitors_next ON literature_monitors(next_run) WHERE is_active;
+```
+
 ---
 
 ## 6. Technical Stack
