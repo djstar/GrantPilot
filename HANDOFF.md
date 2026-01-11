@@ -296,5 +296,64 @@ Load these files in order:
 
 ---
 
-*Last updated: January 2025 (v1.2)*
+### Session: Phase 1a Implementation (January 2026)
+
+**What happened:**
+- Built complete Phase 1a scaffold (Core Foundation)
+- Created 39 files across backend and frontend
+- All TypeScript compiles successfully
+- Frontend builds to production
+
+**Files Created:**
+
+| Directory | Key Files |
+|-----------|-----------|
+| `src/backend/` | FastAPI app, SQLAlchemy models, API routers |
+| `src/frontend/` | React + Vite, shadcn/ui components, pages |
+| `src/` | docker-compose.yml, start.sh |
+
+**Implementation Notes:**
+
+1. **pgvector for embeddings**: Using 768-dim vectors for PubMedBERT compatibility
+   - `DocumentChunk.embedding` uses `Vector(768)` from pgvector-python
+
+2. **Docker service naming**: Service is `db` not `postgres` in docker-compose
+   - Update any scripts referencing `postgres` to use `db`
+
+3. **Vite environment types**: Must create `src/vite-env.d.ts` with:
+   ```typescript
+   /// <reference types="vite/client" />
+   interface ImportMetaEnv {
+     readonly VITE_API_URL: string
+   }
+   ```
+
+4. **shadcn/ui setup**: Using CSS variables in `index.css` for theming
+   - Light/dark mode via `.dark` class on root element
+
+5. **sonner for toasts**: Added as dependency (not in original package.json)
+   - Import `Toaster` from 'sonner' in App.tsx
+
+6. **File upload validation**: Backend validates by extension + MIME type
+   - PDF, DOCX, DOC, TXT supported
+   - Size limit configurable in settings
+
+**Lessons Learned:**
+
+| Issue | Solution |
+|-------|----------|
+| Docker Compose `version` attribute deprecated | Remove it, not needed in modern Docker |
+| Frontend port should be 5173 for Vite dev | Update docker-compose and start.sh |
+| `import.meta.env` TypeScript error | Add vite-env.d.ts with reference types |
+| Missing sonner package | Add to package.json dependencies |
+
+**Next Steps:**
+1. Test with Docker when available
+2. Add document processing worker (Celery task)
+3. Implement WebSocket for real-time updates
+4. Add LLM integration layer
+
+---
+
+*Last updated: January 2026 (v1.3)*
 *Generated from Claude.ai + Claude Code sessions*
