@@ -173,6 +173,9 @@ class DocumentChunk(Base):
     )
     chunk_index: Mapped[int] = mapped_column(Integer, nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
+    start_char: Mapped[Optional[int]] = mapped_column(Integer)
+    end_char: Mapped[Optional[int]] = mapped_column(Integer)
+    word_count: Mapped[Optional[int]] = mapped_column(Integer)
     token_count: Mapped[Optional[int]] = mapped_column(Integer)
 
     # Vector embeddings (768-dim for PubMedBERT, 1536 for OpenAI)

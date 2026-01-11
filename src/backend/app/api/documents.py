@@ -16,6 +16,7 @@ from pydantic import BaseModel
 from app.db.database import get_db
 from app.db.models import Document, DocumentType, ProcessingStatus
 from app.config import get_settings
+from app.tasks.document_tasks import process_document_task
 
 router = APIRouter()
 settings = get_settings()
@@ -132,8 +133,8 @@ async def upload_document(
     await db.flush()
     await db.refresh(document)
 
-    # TODO: Trigger async processing task
-    # celery_app.send_task("process_document", args=[str(document.id)])
+    # Trigger async processing task
+    process_document_task.delay(str(document.id), file_path)
 
     return DocumentResponse.model_validate(document)
 
