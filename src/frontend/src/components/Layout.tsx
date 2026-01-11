@@ -5,6 +5,7 @@ const navigation = [
   { name: 'Dashboard', href: '/' },
   { name: 'Projects', href: '/projects' },
   { name: 'Documents', href: '/documents' },
+  { name: 'Chat', href: '/chat' },
 ]
 
 export default function Layout() {

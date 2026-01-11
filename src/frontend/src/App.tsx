@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard'
 import Projects from './pages/Projects'
 import ProjectDetail from './pages/ProjectDetail'
 import Documents from './pages/Documents'
+import Chat from './pages/Chat'
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
           <Route path="projects" element={<Projects />} />
           <Route path="projects/:id" element={<ProjectDetail />} />
           <Route path="documents" element={<Documents />} />
+          <Route path="chat" element={<Chat />} />
         </Route>
       </Routes>
       <Toaster position="bottom-right" />

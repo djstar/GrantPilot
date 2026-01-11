@@ -3,6 +3,7 @@ Document Processing Celery Tasks
 """
 
 import os
+import asyncio
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -10,6 +11,7 @@ from app.celery_app import celery_app
 from app.config import get_settings
 from app.db.models import Document, DocumentChunk
 from app.processors.document_processor import process_document
+from app.services.embeddings import get_embedding_service
 
 settings = get_settings()
 
@@ -51,6 +53,9 @@ def process_document_task(self, document_id: str, file_path: str):
         document.word_count = result["word_count"]
 
         # Create chunks
+        chunk_texts = [chunk_data["text"] for chunk_data in result["chunks"]]
+        chunks_created = []
+
         for chunk_data in result["chunks"]:
             chunk = DocumentChunk(
                 document_id=document_id,
@@ -59,9 +64,28 @@ def process_document_task(self, document_id: str, file_path: str):
                 start_char=chunk_data["start_char"],
                 end_char=chunk_data["end_char"],
                 word_count=chunk_data["word_count"],
-                # embedding will be added later by embedding task
             )
             db.add(chunk)
+            chunks_created.append(chunk)
+
+        db.flush()  # Get chunk IDs
+
+        # Generate embeddings if service is available
+        embedding_service = get_embedding_service()
+        embeddings_generated = 0
+
+        if embedding_service.is_available() and chunk_texts:
+            # Run async embedding generation in sync context
+            loop = asyncio.new_event_loop()
+            try:
+                embeddings = loop.run_until_complete(
+                    embedding_service.embed_texts(chunk_texts)
+                )
+                for chunk, embedding in zip(chunks_created, embeddings):
+                    chunk.embedding = embedding
+                    embeddings_generated += 1
+            finally:
+                loop.close()
 
         # Mark as completed
         document.processing_status = "completed"
@@ -71,6 +95,7 @@ def process_document_task(self, document_id: str, file_path: str):
             "document_id": document_id,
             "status": "completed",
             "chunks_created": len(result["chunks"]),
+            "embeddings_generated": embeddings_generated,
             "word_count": result["word_count"],
             "page_count": result["page_count"],
         }
