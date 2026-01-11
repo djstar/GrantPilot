@@ -348,12 +348,44 @@ Load these files in order:
 | Missing sonner package | Add to package.json dependencies |
 
 **Next Steps:**
-1. Test with Docker when available
-2. Add document processing worker (Celery task)
+1. ~~Test with Docker when available~~ ✅
+2. ~~Add document processing worker (Celery task)~~ ✅
 3. Implement WebSocket for real-time updates
-4. Add LLM integration layer
+4. ~~Add LLM integration layer~~ ✅
 
 ---
 
-*Last updated: January 2026 (v1.3)*
+### Session: RAG Chat Implementation (January 2026)
+
+**What happened:**
+- Added complete RAG pipeline: embeddings, vector search, chat
+- Document processing now generates embeddings
+- Chat UI with conversation history
+
+**New Services:**
+
+| Service | File | Description |
+|---------|------|-------------|
+| EmbeddingService | `services/embeddings.py` | OpenAI embeddings (768-dim) |
+| SearchService | `services/search.py` | pgvector cosine similarity search |
+| ChatService | `services/chat.py` | RAG chat with Claude/OpenAI |
+
+**API Endpoints:**
+- `POST /api/chat` - Chat with RAG context
+- `POST /api/chat/stream` - Streaming chat
+- `POST /api/chat/search` - Semantic document search
+
+**Environment Variables Required:**
+- `ANTHROPIC_API_KEY` - For Claude chat
+- `OPENAI_API_KEY` - For embeddings + GPT fallback
+
+**Key Implementation Details:**
+1. Embeddings use `text-embedding-3-small` with 768 dims (matches pgvector schema)
+2. Search uses cosine distance: `1 - (embedding <=> query_embedding)`
+3. Chat context limited to ~4000 tokens to leave room for response
+4. Streaming supported for both Claude and OpenAI
+
+---
+
+*Last updated: January 2026 (v1.4)*
 *Generated from Claude.ai + Claude Code sessions*
