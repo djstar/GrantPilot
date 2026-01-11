@@ -32,3 +32,9 @@ yarn-error.log
 # Local development
 *.local
 .secrets/
+
+# Data directories (Docker volumes)
+data/postgresql/
+data/redis/
+data/uploads/
+data/backups/
