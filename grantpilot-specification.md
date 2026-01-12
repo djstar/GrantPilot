@@ -52,6 +52,38 @@ GrantPilot is an AI-powered grant writing assistant that functions as both a **c
 
 ---
 
+## 1.4 Goals and Non-Goals
+
+### Phase 1b Goals (Current)
+
+| ID | Goal | Success Criteria |
+|----|------|------------------|
+| G1 | Implement WebSocket infrastructure | Real-time agent status updates visible in UI |
+| G2 | Develop Writing Agent | Can generate Specific Aims draft from project context |
+| G3 | Implement Agent Orchestrator | Task decomposition and multi-agent collaboration working |
+| G4 | Implement style learning | System adapts output based on 5+ uploaded documents |
+| G5 | Add cost tracking per task | Users can see token usage and cost per agent operation |
+
+### Phase 1b Non-Goals (Explicitly Out of Scope)
+
+| ID | Non-Goal | Rationale |
+|----|----------|-----------|
+| NG1 | Full ReadCube API integration | API access may be restricted; use RIS/BibTeX import instead |
+| NG2 | Image generation ("Nano Banana API") | Service availability unclear; defer to Phase 2 |
+| NG3 | Cloud deployment | Focus on local Docker deployment for v1 |
+| NG4 | Multi-user collaboration | Single-user application for initial release |
+| NG5 | Advanced crash recovery | Basic checkpointing only; full recovery in Phase 2 |
+| NG6 | OAuth/SSO authentication | API key-based auth sufficient for single user |
+
+### Long-Term Goals (v2+)
+
+- Cloud deployment option with user accounts
+- Team collaboration features
+- Direct submission to eRA Commons/Grants.gov
+- Integration with institutional budgeting systems
+
+---
+
 ## 2. Vision & Core Value Proposition
 
 ### 2.1 Problem Statement
@@ -1823,6 +1855,110 @@ grantpilot/
     └── restore.py              # Restore from backup
 ```
 
+### 6.4 Performance Requirements / SLAs
+
+| Metric | Target | Measurement Method |
+|--------|--------|-------------------|
+| **API Response Time** | p95 < 500ms | All non-streaming GET/POST endpoints |
+| **Chat First Token** | p95 < 1.5s | Time to first WebSocket chunk |
+| **Chat Complete Response** | p95 < 30s | Full streaming response delivered |
+| **Document Processing** | p95 < 60s | Per 10-page PDF (extract + chunk + embed) |
+| **RAG Query** | p95 < 1s | Vector search + context retrieval |
+| **System Availability** | 99.5% | Excluding scheduled maintenance |
+| **Concurrent Users** | 50 | Supported per instance |
+| **Concurrent Agent Tasks** | 10 | Parallel drafting sessions |
+
+### 6.5 Security Considerations
+
+#### Authentication & Authorization
+- **Phase 1b:** API key-based authentication (single user)
+- **Future:** JWT with 24-hour expiry, OAuth 2.0 support
+- **Row-Level Security:** All database queries filter by user context
+
+#### Data Protection
+| Data Type | Protection Method |
+|-----------|-------------------|
+| Passwords | bcrypt with work factor 12 |
+| API Keys (LLM providers) | System keyring (macOS Keychain) or encrypted env vars |
+| User PII | PostgreSQL pgcrypto encryption at rest |
+| Network Traffic | HTTPS/TLS 1.3 for all external communication |
+| Secrets | Environment variables, never committed to code |
+
+#### Input Validation
+- All API inputs validated via Pydantic models (type, length, regex)
+- File uploads restricted to: `.pdf`, `.docx`, `.txt`, `.ris`, `.bib`
+- Maximum file size: 50MB
+- Content-type verification for uploads
+
+#### Audit Logging
+- All agent tasks logged with user_id, timestamp, cost
+- Document uploads tracked with file hash
+- LLM calls logged (prompt hash, token count, not full content)
+
+### 6.6 Error Handling Strategy
+
+#### API Error Codes
+| Code | HTTP Status | Description |
+|------|-------------|-------------|
+| `ERR_INVALID_INPUT` | 400 | Request validation failed |
+| `ERR_UNAUTHORIZED` | 401 | Invalid or missing authentication |
+| `ERR_FORBIDDEN` | 403 | User lacks permission |
+| `ERR_NOT_FOUND` | 404 | Resource doesn't exist |
+| `ERR_RATE_LIMITED` | 429 | Too many requests |
+| `ERR_TASK_FAILED` | 500 | Agent task failed |
+| `ERR_LLM_UNAVAILABLE` | 503 | LLM provider unreachable |
+
+#### Retry Logic
+- **Transient failures:** Exponential backoff (1s, 2s, 4s), max 3 retries via Celery
+- **LLM failures:** Fallback chain: Claude → OpenAI → Ollama (if enabled)
+- **Database connection:** Auto-reconnect with 5-second delay
+
+#### Agent Crash Recovery
+- Checkpoint saved after each logical work unit
+- On worker restart, Orchestrator resumes from last checkpoint if status='running'
+- Failed tasks marked with error details for user review
+
+### 6.7 Observability
+
+#### Logging
+- **Format:** Structured JSON to stdout
+- **Fields:** `timestamp`, `level`, `service`, `endpoint`, `user_id`, `correlation_id`, `message`
+- **Levels:** DEBUG, INFO, WARNING, ERROR, CRITICAL
+
+#### Metrics (Prometheus-compatible)
+```
+api_request_duration_seconds{endpoint, method}     # histogram
+agent_task_duration_seconds{agent_type, status}    # histogram
+llm_requests_total{provider, model}                # counter
+document_processing_seconds{file_type}             # histogram
+active_websocket_connections                       # gauge
+rag_cache_hit_rate                                 # gauge
+```
+
+#### Alerting Thresholds
+| Level | Condition |
+|-------|-----------|
+| Warning | API p95 latency > 800ms for 5 minutes |
+| Warning | Error rate > 2% for 5 minutes |
+| Critical | Error rate > 5% for 2 minutes |
+| Critical | Health check fails 3 consecutive times |
+
+### 6.8 Testing Strategy
+
+| Test Type | Coverage Target | Tools | Frequency |
+|-----------|-----------------|-------|-----------|
+| **Unit Tests** | 80% line coverage (core logic) | pytest | Every commit |
+| **Integration Tests** | All API endpoints | pytest + httpx | PR merge |
+| **End-to-End Tests** | Critical user journeys | Playwright | Nightly |
+| **Performance Tests** | Validate SLAs | k6 | Weekly |
+| **Security Tests** | OWASP baseline | ZAP, Snyk | Weekly |
+
+**Critical E2E Journeys:**
+1. User login → Project creation → Document upload
+2. Document upload → Processing → RAG chat query
+3. Project creation → Agent task → Draft generation
+4. Agent task → Pause → Resume → Complete
+
 ---
 
 ## 7. Database Schema
@@ -1985,8 +2121,8 @@ CREATE TABLE document_chunks (
     chunk_text      TEXT,
     chunk_metadata  JSONB,
     
-    -- Vector embedding
-    embedding       vector(1536),
+    -- Vector embedding (768-dim for PubMedBERT/SPECTER2 compatibility)
+    embedding       vector(768),
     
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -2122,7 +2258,7 @@ CREATE TABLE learned_patterns (
     confidence      DECIMAL(3,2),
     occurrence_count INTEGER DEFAULT 1,
     
-    style_vector    vector(1536),
+    style_vector    vector(768),  -- Match document chunk embedding dimensions
     
     is_active       BOOLEAN DEFAULT true,
     
@@ -2173,7 +2309,7 @@ CREATE TABLE references (
     
     abstract        TEXT,
     
-    relevance_embedding vector(1536),
+    relevance_embedding vector(768),  -- Match document chunk embedding dimensions
     
     readcube_id     VARCHAR(255),
     
@@ -2199,30 +2335,59 @@ CREATE TABLE document_references (
 CREATE TABLE agent_tasks (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id      UUID REFERENCES projects(id),
-    
-    agent_type      VARCHAR(100),
+    parent_task_id  UUID REFERENCES agent_tasks(id),  -- For sub-task hierarchy
+
+    agent_type      VARCHAR(100) NOT NULL,
     task_description TEXT,
     task_config     JSONB,
-    
+
     status          VARCHAR(50) DEFAULT 'pending',
+    -- Status values: 'pending', 'running', 'paused', 'completed', 'failed', 'cancelled'
     started_at      TIMESTAMP,
     completed_at    TIMESTAMP,
-    
+
     time_limit_minutes INTEGER,
-    depth_level     VARCHAR(50),
-    
+    depth_level     INTEGER DEFAULT 0,  -- 0=root, max 3 for collaboration
+
     result          JSONB,
     result_summary  TEXT,
-    
+
     activity_log    JSONB,
-    
+
+    -- Checkpoint for crash recovery (see schema below)
+    checkpoint      JSONB DEFAULT '{}'::jsonb,
+    checkpoint_at   TIMESTAMP,
+
     tokens_used     INTEGER DEFAULT 0,
     cost_incurred   DECIMAL(10,4) DEFAULT 0,
-    
+
     user_injections JSONB,
-    
-    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Checkpoint JSONB Schema:
+-- {
+--   "version": 1,                          -- Schema version for migrations
+--   "last_step": "string",                 -- Name of last completed step
+--   "step_index": 0,                       -- Numeric progress indicator
+--   "total_steps": 5,                      -- Expected total steps (if known)
+--   "completed_items": ["item1", "item2"], -- List of completed work items
+--   "interim_results": {                   -- Partial results to preserve
+--     "draft_sections": [...],
+--     "research_findings": [...],
+--     "sources_found": [...]
+--   },
+--   "context_state": {                     -- Agent-specific state
+--     "current_query": "...",
+--     "remaining_budget": 1000
+--   },
+--   "tokens_at_checkpoint": 1234,          -- Tokens spent up to this point
+--   "timestamp": "2024-01-12T10:30:00Z"    -- ISO8601 checkpoint time
+-- }
+
+COMMENT ON COLUMN agent_tasks.checkpoint IS 'Serialized agent state for crash recovery. Saved after each logical work unit.';
 
 -- ============================================================================
 -- COST TRACKING
