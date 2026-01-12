@@ -387,5 +387,170 @@ Load these files in order:
 
 ---
 
-*Last updated: January 2026 (v1.4)*
+### Session: Health Checks & API Tests (January 2026)
+
+**What happened:**
+- Added comprehensive health check endpoints for all services
+- Created bash and Python test scripts for API verification
+- All 17 API tests passing
+
+**Health Check Endpoints:**
+
+| Endpoint | Description |
+|----------|-------------|
+| `/health` | Basic API health |
+| `/health/db` | PostgreSQL + pgvector extension |
+| `/health/redis` | Redis connection |
+| `/health/embeddings` | OpenAI embedding service status |
+| `/health/llm` | Claude/OpenAI LLM configuration |
+| `/health/full` | All services with detailed status |
+| `/health/ready` | Kubernetes-style readiness probe |
+
+**Test Scripts:**
+- `src/scripts/check_apis.sh` - Quick bash health check with colored output
+- `src/scripts/test_apis.py` - Full Python test suite (17 tests)
+
+**Service Status Levels:**
+- `healthy` - Service working correctly
+- `degraded` - Core services work, some unconfigured (e.g., no API keys)
+- `unhealthy` - Critical service failure
+
+---
+
+## Current Implementation Status (Phase 1a Complete)
+
+### What's Built & Working
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| **Docker Infrastructure** | ✅ | PostgreSQL+pgvector, Redis, Backend, Celery, Frontend |
+| **FastAPI Backend** | ✅ | Async, CORS, lifespan events |
+| **SQLAlchemy Models** | ✅ | Project, Document, DocumentChunk, RFA |
+| **Document Upload** | ✅ | PDF, DOCX, DOC, TXT with validation |
+| **Celery Processing** | ✅ | Text extraction, chunking, embeddings |
+| **Embeddings** | ✅ | OpenAI text-embedding-3-small (768-dim) |
+| **Vector Search** | ✅ | pgvector cosine similarity |
+| **RAG Chat** | ✅ | Claude/OpenAI with document context |
+| **React Frontend** | ✅ | Vite, shadcn/ui, React Query |
+| **Chat UI** | ✅ | Conversation history, sources |
+| **Health Checks** | ✅ | All services monitored |
+| **API Tests** | ✅ | 17 tests passing |
+
+### Files Created (Key Files)
+
+```
+src/
+├── docker-compose.yml          # All services orchestration
+├── start.sh                    # Startup script
+├── scripts/
+│   ├── check_apis.sh          # Bash health check
+│   └── test_apis.py           # Python API tests
+├── backend/
+│   ├── app/
+│   │   ├── main.py            # FastAPI app
+│   │   ├── config.py          # Pydantic settings
+│   │   ├── celery_app.py      # Celery configuration
+│   │   ├── api/
+│   │   │   ├── health.py      # Health endpoints
+│   │   │   ├── projects.py    # Projects CRUD
+│   │   │   ├── documents.py   # Document upload
+│   │   │   └── chat.py        # RAG chat API
+│   │   ├── db/
+│   │   │   ├── database.py    # Async SQLAlchemy
+│   │   │   └── models.py      # ORM models
+│   │   ├── processors/
+│   │   │   └── document_processor.py  # Text extraction
+│   │   ├── services/
+│   │   │   ├── embeddings.py  # OpenAI embeddings
+│   │   │   ├── search.py      # Vector search
+│   │   │   └── chat.py        # LLM chat service
+│   │   └── tasks/
+│   │       └── document_tasks.py  # Celery tasks
+│   ├── requirements.txt
+│   └── Dockerfile
+└── frontend/
+    ├── src/
+    │   ├── App.tsx            # Router setup
+    │   ├── api/client.ts      # API client
+    │   ├── components/
+    │   │   ├── Layout.tsx     # Navigation layout
+    │   │   └── ui/            # shadcn/ui components
+    │   └── pages/
+    │       ├── Dashboard.tsx
+    │       ├── Projects.tsx
+    │       ├── Documents.tsx
+    │       └── Chat.tsx       # Chat interface
+    ├── package.json
+    └── Dockerfile
+```
+
+### How to Start
+
+```bash
+# Start all services
+cd src && ./start.sh
+
+# Or manually with Docker Compose
+cd src && docker compose up -d
+
+# Check health
+./scripts/check_apis.sh
+
+# Run API tests
+python3 ./scripts/test_apis.py
+
+# View logs
+docker compose logs -f
+```
+
+### URLs
+
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:5173 |
+| Backend API | http://localhost:8000/api |
+| API Docs | http://localhost:8000/docs |
+| Health Check | http://localhost:8000/health/full |
+
+### Environment Variables (for LLM features)
+
+```bash
+export ANTHROPIC_API_KEY=sk-ant-...  # For Claude chat
+export OPENAI_API_KEY=sk-...         # For embeddings + GPT fallback
+```
+
+---
+
+## What's Next (Phase 1b: Agent Foundation)
+
+1. **WebSocket for real-time updates** - Live document processing status
+2. **Writing Agent** - Implement first agent for grant section drafting
+3. **Agent orchestrator** - Task routing and collaboration protocol
+4. **Style learning** - Match user's writing voice from corpus
+5. **Cost tracking** - Per-project budget monitoring
+
+---
+
+## Quick Restart Commands
+
+```bash
+# Resume development
+cd /Users/sizunj/VSCode/GrantPilot
+
+# Check if Docker is running
+docker ps
+
+# Start services
+cd src && docker compose up -d
+
+# Verify everything works
+./scripts/check_apis.sh
+
+# View this handoff
+cat HANDOFF.md
+```
+
+---
+
+*Last updated: January 2026 (v1.5)*
 *Generated from Claude.ai + Claude Code sessions*
