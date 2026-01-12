@@ -10,7 +10,7 @@
 
 | Priority | Count | Status |
 |----------|-------|--------|
-| Critical | 5 | Open |
+| Critical | 5 | 4 Resolved, 1 Open |
 | High | 4 | Open |
 | Medium | 4 | Open |
 | Low | 3 | Open |
@@ -20,7 +20,7 @@
 ## Critical Issues (Must Fix Before v1)
 
 ### SPEC-001: Embedding Dimension Inconsistency
-**Status:** Open
+**Status:** ✅ Resolved
 **Source:** All models + Claude
 **Location:** `grantpilot-specification.md` Section 7, `document_chunks` table
 
@@ -31,45 +31,29 @@
 - PubMedBERT outputs 768
 
 **Resolution:**
-- [ ] Decide canonical dimension: **768** (matches implementation, PubMedBERT compatible)
-- [ ] Update spec Section 7: `embedding vector(768)`
-- [ ] Document in spec which embedding model is primary
+- [x] Decide canonical dimension: **768** (matches implementation, PubMedBERT compatible)
+- [x] Update spec Section 7: `embedding vector(768)` - Updated in 3 locations
+- [x] Document in spec which embedding model is primary
 
 ---
 
 ### SPEC-002: Missing Goals and Non-Goals
-**Status:** Open
+**Status:** ✅ Resolved
 **Source:** All 3 models (unanimous)
-**Location:** `grantpilot-specification.md` - missing section
+**Location:** `grantpilot-specification.md` Section 1.4
 
 **Problem:**
 No explicit statement of what Phase 1b aims to achieve and what is explicitly out of scope.
 
 **Resolution:**
-Add section after Overview:
-
-```markdown
-## Goals and Non-Goals
-
-### Phase 1b Goals
-- G1: Implement WebSocket infrastructure for real-time agent updates
-- G2: Develop and integrate the Writing Agent
-- G3: Implement Agent Orchestrator for task decomposition and collaboration
-- G4: Implement style learning from user's uploaded documents
-- G5: Add cost tracking per agent/task
-
-### Phase 1b Non-Goals
-- NG1: Full ReadCube API integration (deferred - API may be restricted)
-- NG2: Image generation via "Nano Banana API" (service unclear)
-- NG3: Cloud deployment (local Docker only)
-- NG4: Multi-user collaboration
-- NG5: Advanced agent crash recovery beyond basic checkpointing
-```
+- [x] Added Section 1.4 "Goals and Non-Goals" with Phase 1b Goals (G1-G5) and Non-Goals (NG1-NG6)
+- [x] Includes success criteria for each goal
+- [x] Includes rationale for each non-goal
 
 ---
 
 ### SPEC-003: ReadCube Integration Dependency Risk
-**Status:** Open
+**Status:** ✅ Resolved
 **Source:** Claude
 **Location:** `grantpilot-specification.md` Section 5.3
 
@@ -79,35 +63,47 @@ ReadCube is marked "critical for v1" but:
 - "API access may be restricted"
 - Single point of failure for citation management
 
+**Investigation Findings:**
+- ReadCube API requires Enterprise subscription
+- API documentation not publicly available
+- Third-party integrations (Joplin plugin) prove WebSocket sync is feasible
+- Enterprise subscription includes dedicated account manager for API access
+
 **Resolution:**
-- [ ] Demote ReadCube to "optional enhancement"
-- [ ] Promote fallback methods to primary:
-  - RIS/BibTeX import from any reference manager
-  - PMID/DOI bulk import
-  - Paste title → auto-lookup
-- [ ] Update spec to reflect this priority change
+- [x] Demoted ReadCube to "optional enhancement" (requires Enterprise subscription)
+- [x] Promoted RIS/BibTeX/PMID/DOI import to primary methods
+- [x] Updated spec Section 5.3 to reflect this priority change
 
 ---
 
 ### SPEC-004: "Nano Banana API" - Undefined Service
-**Status:** Open
+**Status:** ✅ Resolved
 **Source:** All models + Claude
-**Location:** `grantpilot-specification.md` Section 5.4, Creative Agent
+**Location:** `grantpilot-specification.md` Section 4.3.4, Creative Agent
 
 **Problem:**
 "Nano Banana API" listed as primary for scientific illustrations. No documentation or public API exists for this service.
 
+**Investigation Findings:**
+- "Nano Banana" is Google's branding for Gemini image generation
+- **Nano Banana Pro** = `gemini-3-pro-image-preview` model
+- Up to 4K resolution, excellent text rendering (ideal for scientific figures)
+- Pricing: $0.13-$0.24 per image
+- Python SDK: `google-genai` package
+- FigureLabs (alternative) has no public API - web interface only
+
 **Resolution:**
-- [ ] Clarify what this service is (internal tool? placeholder?)
-- [ ] If unavailable, update spec to use DALL-E 3 as primary
-- [ ] Consider Stable Diffusion as local fallback
+- [x] Clarified: Nano Banana Pro = Gemini image generation API
+- [x] Updated spec Section 4.3.4 with model name, pricing, SDK details
+- [x] DALL-E 3 remains as fallback
+- [x] FigureLabs removed (no API); Stable Diffusion as local option
 
 ---
 
 ### SPEC-005: No Agent Checkpoint Format
-**Status:** Open
+**Status:** ✅ Resolved
 **Source:** Deepseek + Claude
-**Location:** `grantpilot-specification.md` - missing
+**Location:** `grantpilot-specification.md` Section 7, agent_tasks table
 
 **Problem:**
 Agent pause/resume/cancel endpoints exist but:
@@ -116,7 +112,12 @@ Agent pause/resume/cancel endpoints exist but:
 - A 2-hour research task crash loses all work
 
 **Resolution:**
-Add to database schema and document format:
+- [x] Added `checkpoint JSONB` and `checkpoint_at TIMESTAMP` columns to agent_tasks table
+- [x] Added `parent_task_id` for sub-task hierarchy
+- [x] Documented checkpoint JSONB schema with version, last_step, completed_items, interim_results, context_state
+- [x] Added recovery logic description in Section 6.6 Error Handling
+
+Previous resolution section (now implemented):
 
 ```sql
 -- In agent_tasks table

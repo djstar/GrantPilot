@@ -68,8 +68,8 @@ GrantPilot is an AI-powered grant writing assistant that functions as both a **c
 
 | ID | Non-Goal | Rationale |
 |----|----------|-----------|
-| NG1 | Full ReadCube API integration | API access may be restricted; use RIS/BibTeX import instead |
-| NG2 | Image generation ("Nano Banana API") | Service availability unclear; defer to Phase 2 |
+| NG1 | ReadCube API integration | Requires Enterprise subscription; RIS/BibTeX import is primary |
+| NG2 | FigureLabs API | No public API available; using Nano Banana Pro (Gemini) instead |
 | NG3 | Cloud deployment | Focus on local Docker deployment for v1 |
 | NG4 | Multi-user collaboration | Single-user application for initial release |
 | NG5 | Advanced crash recovery | Basic checkpointing only; full recovery in Phase 2 |
@@ -771,9 +771,13 @@ Creative Agent:
       - Data visualization suggestions
       
     backends:
-      - Nano Banana API — primary (better for scientific illustrations)
+      - Nano Banana Pro (Gemini) — primary
+        Model: gemini-3-pro-image-preview
+        Features: Up to 4K resolution, excellent text rendering
+        Pricing: $0.13-$0.24/image
+        SDK: google-genai Python package
       - DALL-E 3 (OpenAI) — fallback
-      - Stable Diffusion (local option)
+      - Stable Diffusion (local option via ComfyUI)
       - Programmatic: matplotlib, plotly, mermaid diagrams
       
     scientific_specific:
@@ -1024,38 +1028,39 @@ quality_bonus:
 
 ### 5.3 Reference Management Integration
 
-**Primary: ReadCube Integration with PMID/DOI preference**
+**Primary: File-based import (RIS, BibTeX, PMID/DOI lists)**
 
-**Fallback: File-based import/export (RIS, BibTeX, PMID/DOI lists)**
+**Optional: ReadCube Papers API (Enterprise subscription required)**
 
 ```yaml
 Citation System:
-  primary_integration:
-    provider: ReadCube Papers
-    features:
-      - API connection (when available)
-      - Import your library
-      - Bidirectional sync
-      - Collection-level sync
-    limitations:
-      - ReadCube API access may be restricted
-      - Rate limits on sync operations
-
-  fallback_methods:
+  primary_methods:
     ris_bibtex_import:
       - Import from .ris or .bib files
-      - Export from ReadCube/Zotero/Mendeley → import to GrantPilot
-      - Periodic manual re-sync workflow
-      - File watch on designated exports folder
+      - Export from ReadCube/Zotero/Mendeley/EndNote → import to GrantPilot
+      - File watch on designated exports folder for auto-sync
+      - Supported formats: RIS, BibTeX, EndNote XML
 
     identifier_files:
       - Upload text file with PMID list (one per line)
       - Upload text file with DOI list
-      - Bulk lookup and import
+      - Bulk lookup via PubMed/CrossRef APIs
+      - Automatic metadata enrichment
 
     manual_entry:
       - Paste title → auto-lookup PMID/DOI via PubMed/CrossRef
       - Manual field entry as last resort
+
+  optional_integration:
+    provider: ReadCube Papers
+    requirements:
+      - ReadCube Enterprise subscription (includes API access)
+      - API documentation available to Enterprise customers only
+    features:
+      - WebSocket-based library sync (proven via Joplin plugin)
+      - Bidirectional sync
+      - Collection-level sync
+    status: Optional enhancement, not required for core functionality
 
   identifier_priority:
     1. PMID (if available — PubMed indexed)
@@ -1711,7 +1716,7 @@ CREATE INDEX idx_literature_monitors_next ON literature_monitors(next_run) WHERE
 │  Cloud LLMs:    Anthropic SDK, OpenAI SDK                                   │
 │  Local LLMs:    Ollama                                                      │
 │  Embeddings:    OpenAI text-embedding-3-small                               │
-│  Image Gen:     Nano Banana API (primary), DALL-E 3 (fallback)              │
+│  Image Gen:     Nano Banana Pro/Gemini (primary), DALL-E 3 (fallback)       │
 │  Prompts:       Jinja2 templates                                            │
 │                                                                             │
 │  DATA                                                                       │
