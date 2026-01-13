@@ -19,9 +19,9 @@ settings = get_settings()
 class ChatService:
     """RAG-powered chat service"""
 
-    def __init__(self, db: AsyncSession):
+    def __init__(self, db: Optional[AsyncSession] = None):
         self.db = db
-        self.search_service = SearchService(db)
+        self.search_service = SearchService(db) if db else None
 
         # Initialize LLM clients
         self.anthropic_client: Optional[AsyncAnthropic] = None
@@ -209,3 +209,88 @@ Instructions:
     def is_available(self) -> bool:
         """Check if chat service is available"""
         return self.anthropic_client is not None or self.openai_client is not None
+
+    async def generate(
+        self,
+        messages: List[dict],
+        model: str = "claude-sonnet-4-20250514",
+        temperature: float = 0.7,
+        max_tokens: int = 2048,
+    ) -> dict:
+        """
+        Generate a response from the LLM without RAG.
+
+        Args:
+            messages: List of message dicts with 'role' and 'content'
+            model: Model to use
+            temperature: Sampling temperature
+            max_tokens: Maximum tokens in response
+
+        Returns:
+            Dict with 'content', 'usage', and 'cost' keys
+        """
+        # Extract system message if present
+        system_prompt = ""
+        user_messages = []
+        for msg in messages:
+            if msg["role"] == "system":
+                system_prompt = msg["content"]
+            else:
+                user_messages.append(msg)
+
+        # Use Claude if model starts with 'claude', otherwise try OpenAI
+        if model.startswith("claude") and self.anthropic_client:
+            response = await self.anthropic_client.messages.create(
+                model=model,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                system=system_prompt if system_prompt else None,
+                messages=user_messages,
+            )
+
+            # Calculate cost (approximate)
+            prompt_tokens = response.usage.input_tokens
+            completion_tokens = response.usage.output_tokens
+            # Claude pricing: $3/M input, $15/M output for Sonnet
+            cost = (prompt_tokens * 3 + completion_tokens * 15) / 1_000_000
+
+            return {
+                "content": response.content[0].text,
+                "usage": {
+                    "prompt_tokens": prompt_tokens,
+                    "completion_tokens": completion_tokens,
+                },
+                "cost": cost,
+            }
+
+        elif self.openai_client:
+            # Use OpenAI
+            openai_messages = []
+            if system_prompt:
+                openai_messages.append({"role": "system", "content": system_prompt})
+            openai_messages.extend(user_messages)
+
+            response = await self.openai_client.chat.completions.create(
+                model=model if not model.startswith("claude") else "gpt-4o",
+                messages=openai_messages,
+                max_tokens=max_tokens,
+                temperature=temperature,
+            )
+
+            # Calculate cost (approximate for gpt-4o)
+            prompt_tokens = response.usage.prompt_tokens
+            completion_tokens = response.usage.completion_tokens
+            # GPT-4o pricing: $5/M input, $15/M output
+            cost = (prompt_tokens * 5 + completion_tokens * 15) / 1_000_000
+
+            return {
+                "content": response.choices[0].message.content,
+                "usage": {
+                    "prompt_tokens": prompt_tokens,
+                    "completion_tokens": completion_tokens,
+                },
+                "cost": cost,
+            }
+
+        else:
+            raise RuntimeError("No LLM API key configured")

@@ -45,7 +45,7 @@ class SearchResult:
 class SearchService:
     """Semantic search over document chunks"""
 
-    def __init__(self, db: AsyncSession):
+    def __init__(self, db: Optional[AsyncSession] = None):
         self.db = db
         self.embedding_service = get_embedding_service()
 
@@ -56,6 +56,7 @@ class SearchService:
         document_ids: Optional[List[UUID]] = None,
         limit: int = 5,
         min_score: float = 0.0,
+        db: Optional[AsyncSession] = None,
     ) -> List[SearchResult]:
         """
         Search for relevant chunks using semantic similarity.
@@ -108,7 +109,12 @@ class SearchService:
 
         sql += " ORDER BY dc.embedding <=> :query_embedding::vector LIMIT :limit"
 
-        result = await self.db.execute(text(sql), params)
+        # Use provided db or fall back to instance db
+        session = db or self.db
+        if not session:
+            return []
+
+        result = await session.execute(text(sql), params)
         rows = result.fetchall()
 
         return [
