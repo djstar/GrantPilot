@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 from app.db.database import engine, Base
-from app.api import projects, documents, health, chat
+from app.api import projects, documents, health, chat, websocket
 
 
 settings = get_settings()
@@ -55,6 +55,7 @@ app.include_router(health.router, tags=["Health"])
 app.include_router(projects.router, prefix="/api/projects", tags=["Projects"])
 app.include_router(documents.router, prefix="/api/documents", tags=["Documents"])
 app.include_router(chat.router, prefix="/api/chat", tags=["Chat"])
+app.include_router(websocket.router, tags=["WebSocket"])
 
 
 @app.get("/")

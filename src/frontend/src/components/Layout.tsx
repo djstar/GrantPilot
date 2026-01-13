@@ -1,5 +1,6 @@
 import { Outlet, Link, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/utils'
+import { useWebSocketContext } from '@/hooks'
 
 const navigation = [
   { name: 'Dashboard', href: '/' },
@@ -10,6 +11,7 @@ const navigation = [
 
 export default function Layout() {
   const location = useLocation()
+  const { isConnected } = useWebSocketContext()
 
   return (
     <div className="min-h-screen bg-background">
@@ -22,6 +24,13 @@ export default function Layout() {
             </div>
             <span className="font-semibold text-xl">GrantPilot</span>
           </Link>
+          {/* Connection status indicator */}
+          <div className="ml-auto" title={isConnected ? 'Connected' : 'Disconnected'}>
+            <div className={cn(
+              'h-2 w-2 rounded-full',
+              isConnected ? 'bg-green-500' : 'bg-red-500'
+            )} />
+          </div>
         </div>
         <nav className="flex flex-col gap-1 p-4">
           {navigation.map((item) => {

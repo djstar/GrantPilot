@@ -75,6 +75,50 @@ GrantPilot is an AI-powered grant writing assistant that functions as both a **c
 | NG5 | Advanced crash recovery | Basic checkpointing only; full recovery in Phase 2 |
 | NG6 | OAuth/SSO authentication | API key-based auth sufficient for single user |
 
+### Phase 1c Goals (Review Agent)
+
+| ID | Goal | Success Criteria |
+|----|------|------------------|
+| G6 | Implement Review Agent with adversarial multi-LLM critique | Simulated NIH review with scores and feedback |
+| G7 | Add reviewer personas (Primary, Secondary, Scientific, Budget) | Each persona provides domain-specific critique |
+| G8 | Implement convergence protocol | Iterative refinement until reviewers agree |
+| G9 | Generate mock Summary Statement | Output matches NIH format with scores |
+
+**Inspiration:** [adversarial-spec](https://github.com/zscole/adversarial-spec) multi-LLM debate pattern
+
+**Review Agent Architecture:**
+```yaml
+Review Agent:
+  purpose: Simulate NIH study section review before submission
+
+  llm_backends:
+    - Claude (primary critique)
+    - GPT-4o (alternative perspective)
+    - Gemini (third opinion)
+    - Deepseek (cost-effective iterations)
+
+  personas:
+    primary_reviewer: "NIH reviewer scoring Significance, Innovation, Approach"
+    secondary_reviewer: "Domain expert in user's research field"
+    scientific_reviewer: "Methods expert checking experimental rigor"
+    budget_reviewer: "Checks budget justification and timeline"
+
+  workflow:
+    1. Writing Agent produces draft section
+    2. Review Agent sends to multiple LLMs with NIH personas
+    3. Each LLM returns: Score (1-9), Strengths, Weaknesses, Suggestions
+    4. Review Agent synthesizes feedback
+    5. User reviews and accepts/rejects suggestions
+    6. Writing Agent revises based on accepted feedback
+    7. Loop until convergence or user satisfaction
+
+  outputs:
+    - Preliminary scores (1-9 scale per criterion)
+    - Strengths/weaknesses (NIH Summary Statement format)
+    - Specific improvement suggestions
+    - Convergence report (what all reviewers agreed on)
+```
+
 ### Long-Term Goals (v2+)
 
 - Cloud deployment option with user accounts

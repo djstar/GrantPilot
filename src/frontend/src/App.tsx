@@ -6,10 +6,11 @@ import Projects from './pages/Projects'
 import ProjectDetail from './pages/ProjectDetail'
 import Documents from './pages/Documents'
 import Chat from './pages/Chat'
+import { WebSocketProvider } from './hooks'
 
 function App() {
   return (
-    <>
+    <WebSocketProvider>
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Dashboard />} />
@@ -20,7 +21,7 @@ function App() {
         </Route>
       </Routes>
       <Toaster position="bottom-right" />
-    </>
+    </WebSocketProvider>
   )
 }
 
